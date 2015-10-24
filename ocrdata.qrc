@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>OCR-data.yaml</file>
+        <file>ocrdata.xml</file>
+    </qresource>
+</RCC>
