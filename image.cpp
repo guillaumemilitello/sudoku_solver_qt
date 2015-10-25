@@ -43,8 +43,12 @@ Mat processInput(Mat img)
         img_gray = img.clone();
     }
 
+    // adjust the block size of the input image
+    unsigned int block_size = 0.03 * img.cols;
+    if(block_size % 2 == 0) block_size ++;
+
     // adaptive threshold
-    adaptiveThreshold(img_gray, img_adpth, 255, 1, 1, 15, 10);
+    adaptiveThreshold(img_gray, img_adpth, 255, 1, 1, block_size, 10);
 
     return img_adpth;
 }
