@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // default size
     this->setFixedSize(297, 40);
     this->setWindowTitle("Sudoku Solver");
-    //this->setWindowIcon(QIcon(":/icon175x175.png"));
 
     // warning box
     warning_window = new QWidget();
@@ -141,6 +140,20 @@ void MainWindow::on_pushButton_solve_pressed()
     // get a clean transformed sudoku grid
     transformSudoku(img_src, img_tr, sudoku_rect);
 
+    // adjust cooridinates to the display ratio and position
+    int _x = sudoku_rect.x*ratio_width;
+    int _y = sudoku_rect.y*ratio_height;
+    int _w = sudoku_rect.width*ratio_width;
+    int _h = sudoku_rect.height*ratio_height;
+
+    // draw a blue rectangle to point data to train
+    display_rect = new QGraphicsRectItem(_x, _y, _w, _h);
+    display_rect->setPen(QPen(Qt::blue));
+    scene_solved->addItem(display_rect);
+
+    // switch to the solved scene
+    ui->graphicsView->setScene(scene_solved);
+
     // pre-process the transformed input
     Mat img_p = processInput(img_tr);
 
@@ -160,27 +173,39 @@ void MainWindow::on_pushButton_solve_pressed()
     // Sudoku data initialization
     Sudoku su(grid);
 
-    // check the viability of the input grid
-    if (!su.checkGrid())
-    {
-        show_warning("Issues into the input grid with the OCR");
-    }
+    // adjust the font size to the sudoku size on the image
+    QFont display_font;
+    display_font.setPixelSize(sudoku_rect.height * ratio_height * 0.0625);
 
-    // solve the sudoku
-    if (!sudokuSolve(su))
+    // check the viability of the input grid and solve the sudoku
+    if (!su.checkGrid() || !sudokuSolve(su))
     {
-        show_warning("Sudoku unsolvable");
+        show_warning("Sudoku unsolvable or issue in the input grid");
+
+        // display ocr number to check the viability of the input
+        for (int y = 0; y < 9; ++y)
+        {
+            for (int x = 0; x < 9; ++x)
+            {
+                // draw only ocr number
+                QGraphicsTextItem * display_number = new QGraphicsTextItem((grid[x][y])? QString::number(grid[x][y]) : "?");
+
+                // adjust cooridinates to the display ratio and position
+                int _x = sudoku_rect.x*ratio_width  + (x + 0.25) * (sudoku_rect.width*ratio_width / 9);
+                int _y = sudoku_rect.y*ratio_height + (y + 0.1) * (sudoku_rect.height*ratio_height / 9);
+
+                // draw the number
+                display_number->setPos(_x, _y);
+                display_number->setDefaultTextColor(Qt::red);
+                display_number->setFont(display_font);
+                scene_solved->addItem(display_number);
+            }
+        }
     }
     else
     {
         // get the solved grid
         su.getGrid(grid_solved);
-
-        // switch to the solved scene
-        ui->graphicsView->setScene(scene_solved);
-
-        QFont display_font;
-        display_font.setPixelSize(25);
 
         // remove original number from the solved grid for not drawing it
         for (int y = 0; y < 9; ++y)
