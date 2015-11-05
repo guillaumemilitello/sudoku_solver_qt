@@ -44,8 +44,12 @@ MainWindow::MainWindow(QWidget *parent) :
     knn = KNearest::create();
 
     // get default OCR data from ocrdata.h
-    samples = Mat(samples_rows, samples_cols, CV_32FC1, samples_data);
-    responses = Mat(responses_rows, responses_cols, CV_32FC1, responses_data);
+    Mat samples_u8(samples_rows, samples_cols, CV_8UC1, samples_data);
+    Mat responses_u8(responses_rows, responses_cols, CV_8UC1, responses_data);
+
+    // convert the data to float for training
+    samples_u8.convertTo(samples, CV_32FC1);
+    responses_u8.convertTo(responses, CV_32FC1);
 
     // train the default data
     train_ocr();
