@@ -241,10 +241,16 @@ void MainWindow::on_actionLoad_OCR_triggered()
         // load data from filename
         FileStorage OCR(ocrfilepath.toStdString(), FileStorage::READ);
 
+        Mat samples_u8, responses_u8;
+
         // get back the data
-        OCR["sample"] >> samples;
-        OCR["response"] >> responses;
+        OCR["sample"] >> samples_u8;
+        OCR["response"] >> responses_u8;
         OCR.release();
+
+        // convert the data to float for training
+        samples_u8.convertTo(samples, CV_32FC1);
+        responses_u8.convertTo(responses, CV_32FC1);
 
         train_ocr();
     }
@@ -308,11 +314,19 @@ void MainWindow::on_actionSave_OCR_triggered()
     if(!ocrfilepath.isEmpty())
     {
         // store data to filename
-        FileStorage OCR(ocrfilepath.toStdString(), FileStorage::WRITE);
-        OCR << "sample" << samples << "response" << responses;
-        OCR.release();
+        //FileStorage OCR(ocrfilepath.toStdString(), FileStorage::WRITE);
+        //OCR << "sample" << samples << "response" << responses;
+        //OCR.release();
 
-        cout << "samples and responses saved to " << ocrfilepath.toStdString() << endl;
+        // store data to filename_u8
+        FileStorage OCRu8(ocrfilepath.toStdString(), FileStorage::WRITE);
+
+        // convert the data to u8 to save space
+        Mat samples_u8, responses_u8;
+        samples.convertTo(samples_u8, CV_8UC1);
+        responses.convertTo(responses_u8, CV_8UC1);
+        OCRu8 << "sample" << samples_u8 << "response" << responses_u8;
+        OCRu8.release();
     }
 }
 
